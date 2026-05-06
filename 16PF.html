@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>卡特尔16PF人格测评</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary: #4A6CF7;
+  --primary-dark: #3B5DE7;
+  --bg: #f0f4f8;
+  --card: #ffffff;
+  --text: #2d3748;
+  --text-light: #718096;
+  --border: #e2e8f0;
+  --danger: #e53e3e;
+  --success: #38a169;
+  --warning: #dd6b20;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.container { max-width: 800px; margin: 0 auto; padding: 16px; }
+
+/* Header */
+.header { text-align: center; padding: 24px 0 16px; }
+.header h1 { font-size: 1.6rem; color: var(--primary); }
+.header p { font-size: 0.85rem; color: var(--text-light); margin-top: 4px; }
+
+/* Cards */
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 16px; }
+.card h2 { font-size: 1.2rem; margin-bottom: 12px; color: var(--primary); }
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.95rem; }
+.form-group input, .form-group select {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 8px;
+  font-size: 1rem; transition: border-color 0.2s; background: #fff;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+.btn {
+  display: inline-block; padding: 12px 28px; border: none; border-radius: 8px;
+  font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  text-align: center; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.btn-primary { background: var(--primary); color: #fff; width: 100%; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary { background: #e2e8f0; color: var(--text); }
+.btn-secondary:hover { background: #cbd5e0; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #c53030; }
+.btn-small { padding: 6px 14px; font-size: 0.85rem; }
+
+/* Progress */
+.progress-bar-wrap { background: #e2e8f0; border-radius: 20px; height: 10px; margin: 8px 0 16px; overflow: hidden; }
+.progress-bar-fill { background: var(--primary); height: 100%; border-radius: 20px; transition: width 0.3s ease; }
+.progress-text { text-align: center; font-size: 0.9rem; color: var(--text-light); margin-bottom: 4px; }
+
+/* Question */
+.question-num { font-size: 0.85rem; color: var(--text-light); margin-bottom: 8px; }
+.question-text { font-size: 1.1rem; font-weight: 500; margin-bottom: 20px; line-height: 1.7; }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.option-btn {
+  display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px;
+  border: 2px solid var(--border); border-radius: 10px; background: #fff;
+  cursor: pointer; transition: all 0.15s; font-size: 1rem; text-align: left;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.option-btn:hover { border-color: var(--primary); background: #f7faff; }
+.option-btn.selected { border-color: var(--primary); background: #eef2ff; font-weight: 500; }
+.option-letter { font-weight: 700; color: var(--primary); min-width: 24px; font-size: 1.1rem; }
+.option-text { flex: 1; }
+.nav-buttons { display: flex; gap: 10px; margin-top: 20px; justify-content: space-between; }
+.nav-buttons .btn { flex: 1; }
+.keyboard-hint { text-align: center; font-size: 0.8rem; color: var(--text-light); margin-top: 10px; }
+
+/* Results */
+.result-header { text-align: center; padding: 20px 0; }
+.result-header h2 { color: var(--primary); }
+.chart-container { max-width: 500px; margin: 0 auto 20px; position: relative; }
+.chart-container canvas { width: 100% !important; height: auto !important; max-height: 400px; }
+
+.factor-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 12px 0; }
+.factor-table th, .factor-table td { padding: 8px 6px; border: 1px solid var(--border); text-align: center; }
+.factor-table th { background: #f7faff; font-weight: 600; position: sticky; top: 0; }
+.factor-table .low { color: var(--danger); font-weight: 600; }
+.factor-table .high { color: var(--primary); font-weight: 600; }
+.factor-table .tag-low { background: #fff5f5; color: var(--danger); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+.factor-table .tag-high { background: #eef2ff; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.factor-detail { margin-bottom: 16px; padding: 14px; background: #fafbfc; border-radius: 8px; border-left: 4px solid var(--primary); }
+.factor-detail h4 { font-size: 1rem; margin-bottom: 6px; }
+.factor-detail .score-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; margin-left: 6px; }
+.factor-detail .score-badge.low { background: #fff5f5; color: var(--danger); }
+.factor-detail .score-badge.mid { background: #edf2f7; color: var(--text); }
+.factor-detail .score-badge.high { background: #eef2ff; color: var(--primary); }
+.factor-detail p { font-size: 0.9rem; color: #4a5568; margin-top: 4px; }
+
+.xy-section { margin-top: 16px; }
+.xy-card { padding: 12px 16px; background: #fafbfc; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--warning); }
+.xy-card h4 { font-size: 0.95rem; margin-bottom: 4px; }
+.xy-card .xy-score { font-weight: 700; color: var(--warning); }
+.xy-card p { font-size: 0.85rem; color: #4a5568; }
+
+.export-buttons { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+.export-buttons .btn { flex: 1; min-width: 120px; }
+.reset-section { text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* Print */
+@media print {
+  body { background: #fff; }
+  .no-print, .btn, .nav-buttons, .reset-section, .keyboard-hint, .progress-bar-wrap, .progress-text { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+  .container { max-width: 100%; }
+  .chart-container { max-width: 400px; }
+}
+
+/* Hidden */
+.hidden { display: none !important; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container { padding: 8px; }
+  .card { padding: 16px; }
+  .header h1 { font-size: 1.3rem; }
+  .question-text { font-size: 1rem; }
+  .option-btn { padding: 12px 12px; font-size: 0.95rem; }
+  .factor-table { font-size: 0.75rem; }
+  .factor-table th, .factor-table td { padding: 4px 3px; }
+}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <!-- Dynamically rendered -->
+</div>
+
+<script>
+// ==================== DATA ====================
+
+// Question structure: {id, f:factor, t:text, a:optionA, b:optionB, c:optionC, list:'A'|'C'|'B'|'C1'|'A1'}
+const QUESTIONS = [
+  {id:1,f:'W',t:'我很明了本测试的说明：',a:'是的',b:'不一定',c:'不是的',list:null},
+  {id:2,f:'W',t:'我对本测试的每一个问题，都能做到诚实地回答：',a:'是的',b:'不一定',c:'不同意',list:null},
+  {id:3,f:'A',t:'如果我有机会的话，我愿意：',a:'到一个繁华的城市去旅行',b:'介于（A）,（C）之间',c:'浏览清静的山区',list:'A'},
+  {id:4,f:'C',t:'我有能力应付各种困难：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:5,f:'C',t:'即使是关在铁笼里的猛兽，我见了也会感到惴惴不安：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:6,f:'E',t:'我总是不敢大胆批评别人的言行：',a:'是的',b:'有时如此',c:'不是的',list:'C'},
+  {id:7,f:'E',t:'我的思想似乎：',a:'比较先进',b:'一般',c:'比较保守',list:'A'},
+  {id:8,f:'F',t:'我不擅长说笑话，讲有趣的事：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:9,f:'G',t:'当我见到邻居或亲友争吵时，我总是：',a:'任其自己解决',b:'介于（A）,（C）之间',c:'予以劝解',list:'C'},
+  {id:10,f:'H',t:'在群众集会时，我：',a:'谈吐自如',b:'介于（A）,（C）之间',c:'保持沉默',list:'A'},
+  {id:11,f:'I',t:'我愿意作一个：',a:'建筑工程师',b:'不确定',c:'社会科学研究者',list:'C'},
+  {id:12,f:'I',t:'阅读时，我喜欢选读：',a:'自然科学书籍',b:'不确定',c:'政治理论书籍',list:'C'},
+  {id:13,f:'L',t:'我认为很多人都有些心里不正常，只是他们不愿承认：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:14,f:'M',t:'我希望我的爱人擅长交际，无须具有文艺才能：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:15,f:'M',t:'对于性情急躁，爱发脾气的人，我仍能以礼相待：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:16,f:'N',t:'受人侍奉时我常常局促不安：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:17,f:'N',t:'在从事体力或脑力劳动之后，我总是需要比别人更多的休息时间，才能保持工作效率：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:18,f:'O',t:'半夜醒来，我常常为种种不安而不能入睡：',a:'常常如此',b:'有时如此',c:'极少如此',list:'A'},
+  {id:19,f:'O',t:'事情进行的不顺利时，我常常急得涕泪交流：',a:'常常如此',b:'有时如此',c:'极少如此',list:'C'},
+  {id:20,f:'Q1',t:'我以为只要双方同意可离婚，可以不受传统观念的束缚：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:21,f:'Q1',t:'我对人或物的兴趣都很容易改变：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:22,f:'Q2',t:'工作中，我愿意：',a:'和别人合作',b:'不确定',c:'自己单独进行',list:'C'},
+  {id:23,f:'Q3',t:'我常常无缘无故的自言自语：',a:'常常如此',b:'偶尔如此',c:'从不如此',list:'C'},
+  {id:24,f:'Q3',t:'无论是工作，饮食或外出游览，我总是：',a:'匆匆忙忙不能尽兴',b:'介于（A）,（C）之间',c:'从容不迫',list:'C'},
+  {id:25,f:'Q4',t:'有时我怀疑别人是否对我的言行真正有兴趣：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:26,f:'A',t:'如果我在工厂里工作，我愿做：',a:'技术科的工作',b:'介于（A）,（C）之间',c:'宣传科的工作',list:'C'},
+  {id:27,f:'A',t:'在阅读时我愿阅读：',a:'有关太空旅行的书籍',b:'不太确定',c:'有关家庭教育的书籍',list:'C'},
+  {id:28,f:'B',t:'本题后面列出三个单词，那个与其他两个单词不同类：',a:'狗',b:'石头',c:'牛',list:'B'},
+  {id:29,f:'C',t:'如果我能到一个新的环境，我要：',a:'把生活安排的和从前不一样',b:'不确定',c:'和从前相仿',list:'C'},
+  {id:30,f:'C',t:'在一生中，我总觉得我能达到我所预期的目标：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:31,f:'E',t:'当我说谎时总觉得内心羞愧不敢正视对方：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:32,f:'E',t:'假使我手里拿着一颗装着子弹的手枪，我必须把子弹拿出来才能安心：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:33,f:'F',t:'多数人认为我是一个说话风趣的人：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:34,f:'G',t:'如果人们知道我内心的世界，他们会大吃一惊：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:35,f:'H',t:'在公共场合，如果我突然成为大家注意的中心，就会感到局促不安：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:36,f:'H',t:'我总喜欢参加规模庞大的晚会或集会：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:37,f:'I',t:'在学科中，我喜欢：',a:'音乐',b:'不一定',c:'手工劳动',list:'A'},
+  {id:38,f:'L',t:'我常常怀疑那些出乎我意料的对我过于友善的人的动机是否诚实：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:39,f:'M',t:'我愿意把我的生活安排得像一个：',a:'艺术家',b:'不确定',c:'会计师',list:'A'},
+  {id:40,f:'M',t:'我认为目前所需要的是：',a:'多出现一些改造世界的理想家',b:'不确定',c:'脚踏实地的实干家',list:'A'},
+  {id:41,f:'N',t:'有时候我觉得我需要剧烈的体力劳动：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:42,f:'N',t:'我愿意跟有教养的人来往而不愿意同粗鲁的人交往：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:43,f:'O',t:'在处理一些必须凭借智慧的事务中：',a:'我的亲人表现的比一般人差',b:'普通',c:'我的亲人表现的超人一等',list:'A'},
+  {id:44,f:'O',t:'当领导召见我时，我：',a:'觉得可以趁机提出建议',b:'介于（A）,（C）之间',c:'总怀疑自己做错事',list:'C'},
+  {id:45,f:'Q1',t:'如果待遇优厚，我愿意做护理精神病人的工作：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:46,f:'Q1',t:'读报时，我喜欢读：',a:'当今世界的基本问题',b:'介于（A）,（C）之间',c:'地方新闻',list:'A'},
+  {id:47,f:'Q2',t:'在接受困难任务时，我总是：',a:'有独立完成的信心',b:'不确定',c:'希望有别人帮助和指导',list:'A'},
+  {id:48,f:'Q3',t:'在游览时，我宁愿观看一个画家的写生，也不愿听大家的辩论：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:49,f:'Q4',t:'我的神经脆弱，稍有点刺激就会战栗：',a:'时常如此',b:'有时如此',c:'从不如此',list:'A'},
+  {id:50,f:'Q4',t:'早晨起来，常常感到疲乏不堪：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:51,f:'A',t:'如果待遇相同，我愿选做：',a:'森林管理员',b:'不一定',c:'中小学教员',list:'C'},
+  {id:52,f:'A',t:'每逢过年过节或亲友结婚时，我：',a:'喜欢赠送礼品',b:'不太确定',c:'不愿相互送礼',list:'A'},
+  {id:53,f:'B',t:'本题后列有三个数字，那个数字与其他两个数字不同类：',a:'5',b:'2',c:'7',list:'B'},
+  {id:54,f:'B',t:'猫和鱼就像牛和：',a:'牛奶',b:'牧草',c:'盐',list:'B'},
+  {id:55,f:'C',t:'我在小学时敬佩的老师，到现在仍然值得我敬佩：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:56,f:'E',t:'我觉得我确实有一些别人所不及的优良品质：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:57,f:'E',t:'根据我的能力，即使让我做一些平凡的工作，我也会安心的：',a:'是的',b:'不太确定',c:'不是的',list:'C'},
+  {id:58,f:'F',t:'我喜欢看电影或参加其他娱乐活动的次数：',a:'比一般人多',b:'和一般人相同',c:'比一般人少',list:'A'},
+  {id:59,f:'G',t:'我喜欢从事需要精密技术的工作：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:60,f:'H',t:'在有威望有地位的人面前，我总是较为居促谨慎：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:61,f:'H',t:'对于我来说在大众面前演讲或表演，是一件难事：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:62,f:'I',t:'我愿意：',a:'指挥几个人工作',b:'不确定',c:'和同志们一起工作',list:'C'},
+  {id:63,f:'L',t:'即使我做了一件让别人笑话的事，我也能坦然处之：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:64,f:'L',t:'我认为没有人会幸灾乐祸的希望我遇到困难：',a:'是的',b:'不确定',c:'不是的',list:'C'},
+  {id:65,f:'M',t:'一个人应该考虑人生的真正意义：',a:'是的',b:'不确定',c:'不是的',list:'A'},
+  {id:66,f:'N',t:'我喜欢去处理被别人弄得一蹋糊涂的工作：',a:'是的',b:'介于A、C之间',c:'不是的',list:'C'},
+  {id:67,f:'N',t:'当我非常高兴时，总有一种"好景不长"的感受：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:68,f:'O',t:'在一般困难情境中，我总能保持乐观：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:69,f:'O',t:'迁居是一件极不愉快的事：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:70,f:'Q1',t:'在年轻的时候，当我和父母的意见不同时：',a:'保留自己的意见',b:'介于（A）,（C）之间',c:'接受父母的意见',list:'A'},
+  {id:71,f:'Q2',t:'我希望把我的家庭：',a:'建设成适合自身活动和娱乐的地方',b:'介于（A）,（C）之间',c:'成为邻里交往活动的一部分',list:'A'},
+  {id:72,f:'Q2',t:'我解决问题时，多借助于：',a:'个人独立思考',b:'介于（A）,（C）之间',c:'和别人互相讨论',list:'A'},
+  {id:73,f:'Q3',t:'在需要当机立断时，我总是：',a:'镇静地运用理智',b:'介于（A），（C）之间',c:'常常紧张兴奋',list:'A'},
+  {id:74,f:'Q4',t:'最近在一两件事情上，我觉得我是无辜受累的：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:75,f:'Q4',t:'我善于控制我的表情：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:76,f:'A',t:'如果待遇相同，我愿做一个：',a:'化学研究工作者',b:'不确定',c:'旅行社经理',list:'C'},
+  {id:77,f:'B',t:'以"惊讶"与"新奇"搭配为例，认为"惧怕"与（ ）搭配：',a:'勇敢',b:'焦虑',c:'恐怖',list:'C1'},
+  {id:78,f:'B',t:'本题后面列出三个分数，哪一个数与其他两个分数不同类：',a:'3/7',b:'3/9',c:'3/11',list:'B'},
+  {id:79,f:'C',t:'不知为什么，有些人总是回避或冷淡我：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:80,f:'C',t:'我虽然好意待人，但常常得不到好报：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:81,f:'E',t:'我不喜欢争强好胜的人：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:82,f:'F',t:'和一般人相比，我的朋友的确太少：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:83,f:'F',t:'不在万不得已的情况下，我总是回避参加应酬性的活动：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:84,f:'G',t:'我认为对领导逢迎得当比工作表现更重要：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:85,f:'H',t:'参加竞赛时，我总是着重在竞赛的活动，而不计较其成败：',a:'总是如此',b:'一般如此',c:'偶然如此',list:'C'},
+  {id:86,f:'H',t:'按照我个人的意愿，我希望做的工作是：',a:'有固定而可靠的工资收入',b:'介于（A）,（C）之间',c:'工资高低应随我的工作表现而随时调整',list:'C'},
+  {id:87,f:'I',t:'我愿意阅读：',a:'军事与政治的实事记载',b:'不一定',c:'富有情感的幻想的作品',list:'C'},
+  {id:88,f:'L',t:'我认为有许多人之所以不敢犯罪，其主要原因是怕被惩罚：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:89,f:'L',t:'我的父母从来不严格要求我事事顺从：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:90,f:'M',t:'"百折不挠，再接再厉"的精神常常被人们所忽略：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:91,f:'M',t:'当有人对我发火时，我总是：',a:'设法使他镇静下来',b:'不太确定',c:'自己也会发起火来',list:'A'},
+  {id:92,f:'N',t:'我希望人们都要友好相处：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:93,f:'O',t:'不论是在极高的屋顶上，还是在极深的隧道中，我很少感到胆怯不安：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:94,f:'O',t:'只要没有过错，不管别人怎么说，我总能心安理得：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:95,f:'Q1',t:'我认为凡是无法用理智来解决的问题，有时就不得不靠强权处理：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:96,f:'Q2',t:'我在年轻的时候，和异性朋友交往：',a:'较多',b:'介于A、C之间',c:'较别人少',list:'C'},
+  {id:97,f:'Q2',t:'我在社团活动中，是一个活跃分子：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:98,f:'Q3',t:'在人声嘈杂中，我仍能不受干扰，专心工作：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:99,f:'Q4',t:'在某些心境下，我常常因为困惑陷入空想而将工作搁置下来：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:100,f:'Q4',t:'我很少用难堪的语言去刺伤别人的感情：',a:'是的',b:'不太确定',c:'不是的',list:'C'},
+  {id:101,f:'A',t:'如果让我选择，我宁愿选做：',a:'列车员',b:'不确定',c:'描图员',list:'A'},
+  {id:102,f:'B',t:'"理不胜词"的意思是：',a:'理不如词',b:'理多而词少',c:'词藻华丽而理不足',list:'C1'},
+  {id:103,f:'B',t:'以"铁锹"与"挖掘"搭配为例，我认为"刀子"与（ ）搭配：',a:'琢磨',b:'切割',c:'铲除',list:'B'},
+  {id:104,f:'C',t:'我在大街上，常常避开我所不愿意打招呼的人：',a:'极不如此',b:'偶然如此',c:'有时如此',list:'A'},
+  {id:105,f:'C',t:'当我聚精会神的听音乐时，假使有人在旁边高谈阔论：',a:'我仍能专心听音乐',b:'介于（A）,（C）之间',c:'不能专心而感到恼怒',list:'A'},
+  {id:106,f:'E',t:'在课堂上，如果我的意见与老师不同，我常常：',a:'保持沉默',b:'不一定',c:'表明自己的看法',list:'C'},
+  {id:107,f:'F',t:'我单独跟异性谈话时，总显得不自然：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:108,f:'F',t:'我在待人接物方面，的确不太成功：',a:'是的',b:'不完全这样',c:'不是的',list:'C'},
+  {id:109,f:'G',t:'每当作一件困难工作时，我总是：',a:'预先做好准备',b:'介于（A）,（C）之间',c:'相信到时候总会有办法解决的',list:'A'},
+  {id:110,f:'H',t:'在我结交朋友中，男女各占一半：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:111,f:'H',t:'我在结交朋友方面：',a:'结识很多的人',b:'不一定',c:'维持几个深交的朋友',list:'A'},
+  {id:112,f:'I',t:'我愿意作一个社会科学家，而不愿作一个机械工程师：',a:'是的',b:'不太确定',c:'不是的',list:'A'},
+  {id:113,f:'L',t:'如果我发现别人的缺点，我常常不顾一切的提出指责：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:114,f:'L',t:'我喜欢设法影响和我一起工作的同志，使他们能协助我所计划的目的：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:115,f:'M',t:'我喜欢做音乐，或跳舞，或新闻采访等工作：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:116,f:'M',t:'当人们表扬我的时候，我总觉得羞愧窘促：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:117,f:'N',t:'我认为一个国家最需要解决的问题是：',a:'政治问题',b:'不太确定',c:'道德问题',list:'A'},
+  {id:118,f:'O',t:'有时我会无故的产生一种面临大祸的恐惧：',a:'是的',b:'有时如此',c:'不是的',list:'A'},
+  {id:119,f:'O',t:'我在童年时，害怕黑暗的次数：',a:'很多',b:'不太多',c:'几乎没有',list:'A'},
+  {id:120,f:'Q1',t:'在闲暇的时候，我喜欢：',a:'看一部历史性的探险小说',b:'不一定',c:'读一本科学性的幻想小说',list:'C'},
+  {id:121,f:'Q2',t:'当人们批评我古怪不正常时，我：',a:'非常气恼',b:'有些气恼',c:'无所谓',list:'C'},
+  {id:122,f:'Q2',t:'当来到一个新城市里找地址时，我常常：',a:'找人问路',b:'介于（A）,（C）之间',c:'参考地图',list:'C'},
+  {id:123,f:'Q3',t:'当朋友声明她要在家休息时，我总是设法怂恿她同我一起到外面去玩：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:124,f:'Q4',t:'在就寝时，我常常：',a:'不易入睡',b:'介于（A）,（C）之间',c:'极易入睡',list:'A'},
+  {id:125,f:'Q4',t:'有人烦扰我时，我：',a:'能不露声色',b:'介于（A）,（C）之间',c:'总要说给别人听，以泄愤怒',list:'C'},
+  {id:126,f:'A',t:'如果待遇相同，我愿做一个：',a:'律师',b:'不确定',c:'航海员',list:'A'},
+  {id:127,f:'B',t:'"时间变成了永恒"这是比喻：',a:'时间过得快',b:'忘了时间',c:'光阴一去不复返',list:'C1'},
+  {id:128,f:'B',t:'本题后的哪一项应接在"╳OOOO╳╳00O╳╳╳"的后面：',a:'╳0╳',b:'00╳',c:'0╳╳',list:'B'},
+  {id:129,f:'C',t:'我不论到什么地方，都能清楚的辨别方向：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:130,f:'C',t:'我热爱我所学的专业和所从事的工作：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:131,f:'E',t:'如果我急于想借朋友的东西，而朋友又不在家时，我认为不告而取也没有关系：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:132,f:'F',t:'我喜欢给朋友讲述一些我个人有趣的经历：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:133,f:'F',t:'我宁愿做一个：',a:'演员',b:'不确定',c:'建筑师',list:'A'},
+  {id:134,f:'G',t:'业余时间，我总是做好安排，不使时间浪费：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:135,f:'H',t:'在和别人交往中，我常常会无缘无故的产生一种自卑感：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:136,f:'H',t:'和不熟识的人交谈，对我来说：',a:'毫不困难',b:'介于（A）,（C）之间',c:'是一件难事',list:'A'},
+  {id:137,f:'I',t:'我所喜欢的音乐是：',a:'轻松活泼的',b:'介于（A）,（C）之间',c:'富有感情的',list:'C'},
+  {id:138,f:'I',t:'我爱想入非非：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:139,f:'L',t:'我认为未来二十年的世界局势，定将好转：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:140,f:'M',t:'在童年时，我喜欢阅读：',a:'神话幻想故事',b:'不确定',c:'战争故事',list:'A'},
+  {id:141,f:'M',t:'我向来对机械，汽车等发生兴趣：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:142,f:'N',t:'即使让我做一个缓刑释放的罪犯的管理人，我也会把工作搞得很好：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:143,f:'O',t:'我仅仅被认为是一个能够苦干而稍有成就的人而已：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:144,f:'O',t:'就是在不顺利的情况下，我仍能保持精神振奋：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:145,f:'Q1',t:'我认为节制生育是解决经济与和平问题的重要条件：',a:'是的',b:'不太确定',c:'不是的',list:'A'},
+  {id:146,f:'Q2',t:'在工作中，我喜欢独自筹划，不愿受别人干涉：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:147,f:'Q3',t:'尽管有的同志和我的意见不和，但仍能跟她搞好团结：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:148,f:'Q3',t:'我在工作和学习上，总是使自己不粗心大意，不忽略细节：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:149,f:'Q4',t:'在和人争辩或险遭事故后，我常常表现出震颤，筋疲力尽，不能安心工作：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:150,f:'Q4',t:'未经医生处方，我是从不乱吃药的：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:151,f:'A',t:'根据我个人的兴趣，我愿意参加：',a:'摄影组织活动',b:'不确定',c:'文娱队活动',list:'C'},
+  {id:152,f:'B',t:'以星火与燎原搭配为例，我认为姑息与（ ）搭配：',a:'同情',b:'养奸',c:'纵容',list:'B'},
+  {id:153,f:'B',t:'"钟表"与"时间"的关系犹如"裁缝"与（ ）的关系：',a:'服装',b:'剪刀',c:'布料',list:'C1'},
+  {id:154,f:'C',t:'生动的梦境，常常干扰我的睡眠：',a:'经常如此',b:'偶然如此',c:'从不如此',list:'C'},
+  {id:155,f:'E',t:'我爱打抱不平：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:156,f:'E',t:'如果我要到一个新城市，我将要：',a:'到处闲逛',b:'不确定',c:'避免去不安全的地方',list:'A'},
+  {id:157,f:'F',t:'我爱穿朴素的衣服，不愿穿华丽的服装：',a:'是的',b:'不太确定',c:'不是的',list:'C'},
+  {id:158,f:'F',t:'我认为安静的娱乐远远胜过热闹的宴会：',a:'是的',b:'不太确定',c:'不是的',list:'C'},
+  {id:159,f:'G',t:'我明知自己有缺点，但不愿接受别人的批评：',a:'偶然如此',b:'极少如此',c:'从不如此',list:'C'},
+  {id:160,f:'G',t:'我总是把"是，非，善，恶"作为处理问题的原则：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:161,f:'H',t:'当我工作时，我不喜欢有许多人在旁边参观：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:162,f:'I',t:'我认为，侮辱那些即使有错误但有文化教养的人，如医生，教师等也是不应该的：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:163,f:'I',t:'在各种课程中，我喜欢：',a:'语文',b:'不确定',c:'数学',list:'A'},
+  {id:164,f:'L',t:'那些自以为是，道貌岸然的人使我生气：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:165,f:'M',t:'和循规蹈矩的人交谈：',a:'很有兴趣，并有所获的',b:'介于（A）,（C）之间',c:'他们的思想简单，使我太厌烦',list:'C'},
+  {id:166,f:'M',t:'我喜欢：',a:'有几个有时对我很苛求但富有感情的朋友',b:'介于（A）,（C）之间',c:'不受别人的干扰',list:'C'},
+  {id:167,f:'N',t:'如果征求我的意见，我赞同：',a:'切实制止精神病患者和智能低下的人生育',b:'不确定',c:'杀人犯必须判处死刑',list:'A'},
+  {id:168,f:'O',t:'有时我会无缘无故的感到沮丧，痛哭：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:169,f:'Q1',t:'当和立场相反的人争辩时，我主张：',a:'尽量找出基本概念的差异',b:'不一定',c:'彼此让步',list:'A'},
+  {id:170,f:'Q1',t:'我一向重感情而不重理智，因而我的观点常常动摇不定：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:171,f:'Q2',t:'我的学习多赖于：',a:'阅读书刊',b:'介于（A）,（C）之间',c:'参加集体讨论',list:'A'},
+  {id:172,f:'Q3',t:'我宁愿选择一个工资较高的工作，不在乎是否有保障，而不愿做工资低固定工作：',a:'是的',b:'不一定',c:'不是的',list:'C'},
+  {id:173,f:'Q3',t:'在参加讨论时，我总是能把握自己的立场：',a:'经常如此',b:'一般如此',c:'必要时才如此',list:'A'},
+  {id:174,f:'Q4',t:'我常常被一些无所谓的小事所烦扰：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:175,f:'Q4',t:'我宁愿住在嘈杂的闹市区，而不愿住在僻静的地区：',a:'是的',b:'不太确定',c:'不是的',list:'C'},
+  {id:176,f:'A',t:'下列工作如果任我挑选的话，我愿做：',a:'少先队辅导员',b:'不太确定',c:'修表工作',list:'A'},
+  {id:177,f:'B',t:'一人（ ）事，人人受累：',a:'偾',b:'愤',c:'喷',list:'A1'},
+  {id:178,f:'B',t:'望子成龙的家长往往（ ）苗助长：',a:'揠',b:'堰',c:'偃',list:'A1'},
+  {id:179,f:'C',t:'气候的变化并不影响我的情绪：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'C'},
+  {id:180,f:'E',t:'因为我对一切问题都有一些见解，所以大家都认为我是一个有头脑的人：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:181,f:'E',t:'我讲话的声音：',a:'洪亮',b:'介于（A）,（C）之间',c:'低沉',list:'A'},
+  {id:182,f:'F',t:'一般人都认为我是一个活跃热情的人：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:183,f:'F',t:'我喜欢做出差机会较多的工作：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:184,f:'G',t:'我做事严格，力求把事情办得尽善尽美：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:185,f:'G',t:'在取回或归还所借的东西时，我总是仔细检查，看是否保持原样：',a:'是的',b:'介于（A）,（C）之间',c:'不是的',list:'A'},
+  {id:186,f:'H',t:'我通常是精力充沛，忙碌多事：',a:'是的',b:'不一定',c:'不是的',list:'A'},
+  {id:187,f:'W',t:'我确信我没有遗漏或漫不经心回答上面的任何问题：',a:'是的',b:'不确定',c:'不是的',list:null}
+];
+
+// Factor names
+const FACTOR_NAMES = {
+  'A':'乐群性','B':'聪慧性','C':'稳定性','E':'恃强性','F':'兴奋性',
+  'G':'有恒性','H':'敢为性','I':'敏感性','L':'怀疑性','M':'幻想性',
+  'N':'世故性','O':'忧虑性','Q1':'实验性','Q2':'独立性','Q3':'自律性','Q4':'紧张性'
+};
+
+// Feature descriptions
+const FEATURES = {
+  'A':{low:'低分数的特征（以下统称低）：建模，孤独，冷漠。标准分低于3者一般固执，对人冷漠，落落寡合，喜欢吹毛求疵，宁愿独自工作，对事而不对人，不轻易放弃自己的主见，为人做事的标准常常很高。严谨而不苟且。物理学家和电机工程师则多系低A,极端的冷静严肃与正确才能圆满地完成任务。',
+       high:'高分数的特征（以下统称高）：外向，热情，乐群。标准分高过8者，一般和蔼可亲，与人相处，合作与适应的能力特强。喜欢和别人共同工作，参加或组织各种社团活动，不斤斤计较，容易接受别人的批评。萍水相逢也能够一见如故。教师和推销员多系高A，需要时时应付人与人之间的复杂情绪或行为问题，而依然能够保证其乐观的态度。'},
+  'B':{low:'低：思想迟钝，学识浅薄，抽象思考能力弱。低者一般对学习与了解能力不强，不能"举一隅而以三隅反"。迟钝的原因可能由于情绪不稳定，心理病态或失常所致。',
+       high:'高：聪明，富有才识，善于抽象思考。高者一般学习能力强，思考敏捷正确，教育，文化水准高，个人心身状态健康。机警者多有高B，高B反映心理机能的正常。专业训练需要高B，但从事例行职务的人如大资源，电话生，家庭主妇等，则因高B而对例行琐务发生厌恶，不能久安其职。'},
+  'C':{low:'低：情绪激动，易生烦恼。低者一般不能以"逆来顺受"的态度，应付生活上所遭遇的阻扰和挫折，容易受环境的支配，而心神动摇不定。不能面对现实，时时会暴躁不安，心身疲乏，甚至于失眠，噩梦，恐怖等症状。所有神经病人和精神病人都属低C。可是凡能随心所欲，安排自己工作进度的人，如作家，邮差或清道工等，则虽系低C，尚无大碍。',
+       high:'高：情绪稳定而成熟，能面对现实。高者一般以沉着的态度应付现实各项问题。行动充满魄力。能振奋勇气，维持团队的精神。有时高C也可能由于不能彻底解决许多生活难题，而不得不自我宽解。教师，机器工程师，推销员，救火队队员等，凡需要应付日常生活各种难题者应有高C。'},
+  'E':{low:'低：谦逊，顺从，通融，恭顺。低者一般行为温顺，迎合别人的意旨，也可能因为希望可遇而不可求，即使处在十全十美的境地，而有"事事不如人"之感，许多精神病人都有这样消极的心情。',
+       high:'高：好强固执，独立积极。高者一般自视甚高，自以为是。可能非常地武断，而时常驾驭不及她的人和反抗权势者。一般的，领袖以及有地位有成就的人多属高E。救火队员和航空飞行员的因素E高。男人较女人高。'},
+  'F':{low:'低：严肃、谨慎、冷静、寡言。低者通常行动拘谨，内省而不轻易发言，较消极、忧郁。有时候可能过分深思熟虑，又近乎骄傲自满。在职责上，他常是认真而可靠的工作人员。实验技术人员则不必有高F。',
+       high:'高：轻松兴奋，随遇而安。高者通常活泼，愉快，健谈。对人对事，热心而富有感情。但是有时也可能会冲动，以致行为变幻莫测。行政主管人员多有高F。竞选人必有高F。'},
+  'G':{low:'低：苟且敷衍，缺乏奉公守法的精神。低者一般缺乏较高的目标和理想，对于人群及社会没有绝对的责任感，甚至于有时不惜执法犯法，不择手段已达到某一目的。但她常能有效的解决实际问题。任性纵欲，放火杀人的罪犯，因素G极低。',
+       high:'高：持恒负责，做事尽职。高者一般细心周到，有始有终。是非善恶是她的行为指针。所结交的朋友多是努力苦干的人，而不十分欣赏诙谐有趣的人。各种社团组织的领袖需要高G。业务管理和警察具有极高的因素G。'},
+  'H':{low:'低：畏怯退缩，缺乏自信心。低者一般在人群中羞怯。有不自然的姿态，有强烈的自卑感。拙于发言，更不愿和陌生人交谈。凡是采取观望的态度，有时由于过分的自我意识而忽视了社会环境中的重要事物与活动。',
+       high:'高：冒险敢为，少有顾忌。高者一般不掩饰，不畏缩，有敢做敢为的精神，使她能经历艰辛而保持刚毅的一例。有时可能太粗心大意，忽视细节，遭受无谓的打击与挫折。可能无聊多事，喜欢向异性殷勤卖力。'},
+  'I':{low:'低：理智的，着重现实，自恃其力。低者常常以客观，坚强，独立的态度处理当前的问题。重视文化修养，可能过分冷酷无情。而工程师，外科医生，统计师等则多低I。',
+       high:'高：敏感，感情用事。高者一般心肠软，易受感动，较女性化，爱好艺术，富于幻想。有时过分不切实际，缺乏耐心和恒心，不喜欢接近粗俗的人和做笨重的工作。在团体活动中，不着实际的看法与行为常常减低了团队的工作效率。室内设计师，音乐家，艺人，女人属高I。'},
+  'L':{low:'低：信赖随和，易与人相处。低者一般无猜忌，不与人角逐竞争，顺应合作，善于体贴人。在团体活动中低L是以团体福利为前提的忠实分子，因素L过分高者常常成事不足，败事有余。工程师，机工，精神病护理员多是低L。',
+       high:'高：怀疑，刚愎，固执己见。高者一般怀疑，不信任别人，与人相处，常常斤斤计较，不顾及到别人的利益。行政人员和警察常是高L。'},
+  'M':{low:'低：现实，合乎成规，力求妥善合力。低者一般先要斟酌现实条件，而后决定取舍，不鲁莽从事。在紧要关头时，也能保持镇静，有时可能过分重视现实，为人索然寡趣。低M多选择需要实际，机警，脚踏实地的工作。',
+       high:'高：幻想的，狂放不羁。高者一般忽视生活的细节，只以本身的动机，当时兴趣等主观因素为行为的出发点。可能富有创造力，有时也过分不务实际，近乎冲动。因而容易被人误解及奚落。艺术家，作者及从事研究者多有高M。'},
+  'N':{low:'低：坦白，直率，天真。低者一般思想简单，感情用事。与人无争，与世无杵，自许，心满意足。但有时显得幼稚，粗鲁，笨拙，似乎缺乏教养。牧师神父，护士等多是低N，牧师的因素N不应太高，低N使她不苛求责难，能容忍同情信徒的缺点。',
+       high:'高：精明能干，世故。高者一般处事老练，行为得体。能冷静地分析一切，近乎狡猾。对于一切事物的看法是理智的，客观的。科学家，工程师，飞行员多是高N。'},
+  'O':{low:'低：乐群，沉着，有自信心。低者一般有信心，不轻易动摇，信任自己有应付问题的能力，有安全感，能适应世俗。有时因为缺乏同情，而引发别人的反感与恶意。职业运动员，电机工，救火队员，护士等多是低O。',
+       high:'高：忧虑抑郁，烦恼自扰。高者一般觉得世道艰辛，人生不如意事常八九，甚至沮丧悲观，时时有患得患失之感。自觉不容于人，也缺乏和人接近的勇气。各种神经病和精神病人都有高O。年老的女招待，低级办事员，以及终生碌碌未尽如意的作家，编辑人等有高O。'},
+  'Q1':{low:'低：保守的，尊重传统观念与行为标准。低者一般无条件地接受社会中许多相沿已久而有权威性的看法，不愿尝试探求新的境界。常常激烈的反对新思想以及一切新的变动。在政治与宗教信仰上，墨守成规，可能被称为老顽固或时代的落伍者。牧师神父与许多为首高深教育的技工等则多有低Q1，神经病人的因素Q1也比较低。',
+        high:'高：自由的，批评激进，不拘泥现实。高者一般喜欢考验一切现有的理论与实施，而予以新的评价，不轻易判断是非，企图了解较前卫的思想与行为。可能广见多闻。愿意充实自己的生活经验。行政主管人，前卫的政治家，科学家都必须具有高Q1。'},
+  'Q2':{low:'低：依赖，随群附和。低者一般宁欲与人共同工作，而不愿独立孤行。常常放弃个人的主见而附和取得别人的好感，需要团体的支持以维持其自信心，却并非真正的乐群者。低Q2者不能胜任需要随机应变能力的职务。',
+        high:'高：自立自强，当机立断。高者一般能够自作主张，独自完成自己的工作计划，不依赖别人，也不受社会舆论的约束，同样也无意控制或支配别人，不嫌恶人，可是也不需要别人的好感。科学家，行政主管人等多有高Q2。'},
+  'Q3':{low:'低：矛盾冲突，不顾大体。低者一般既不能克制自己，又不能尊重礼俗，更不愿考虑别人的需要，充满矛盾却无法解决。生活适应有问题者多低Q3。',
+        high:'高：知己知彼，自律谨严。高者一般言行一致，能够合理的支配自己的感情行动。为人处世，总能保持其自尊心，赢得别人的尊重，有时却不免太固执己见。高Q3者多具有领袖能力的才干，主管人，电机工和生产部门的成功也需要高Q3。'},
+  'Q4':{low:'低：心平气和，闲散宁静，低者一般知足常乐，保持内心的平衡。也可能过分疏懒，缺乏进取心。',
+        high:'高：紧张闲扰，激动挣扎。高者一般缺乏耐心，心神不安，态度兴奋。时常感觉疲乏，又无法彻底摆脱以求宁静。在社群中，她对人与事都缺乏信心。每日生活战战兢兢，而不能自给。未能在生活或职业中发挥本身才智潜能的人多具有高Q4，如餐店招待，家庭主妇，缺乏生活保障的作业等。'}
+};
+
+const X_FEATURES = {
+  'X1':'低分者生活适应顺利，通常感觉心满意足，但极端低分者可能缺乏毅力，事事知难而退，不肯奋斗努力。高分者通常易于激动、焦虑，对于自己的境遇常常感觉不满意，高度的焦虑不但降低工作的效率，而且也会影响身体的健康。',
+  'X2':'低于4.5分属于内向型，高于6.5分属于外向型，4.5-6.5分则为中性。低分者内向，通常羞怯而审慎，与人相处多拘谨不自然。高分者外向，通常善于交际，不拘小节，不受拘束。',
+  'X3':'低分者情绪多困扰不安，通常感觉挫折气馁，遇到问题需经反复考虑才能决定，但平时较为含蓄敏感，温文尔雅，讲究生活艺术。高分者安详机警，果断刚毅，有进取精神，但常常过分现实，忽视了许多生活的情趣，遇到困难，有时不经考虑，不计后果，便贸然行事。',
+  'X4':'低分者常常人云亦云，优柔寡断，受人驱使而不能独立，依赖性强，因而事事迁就，以获得别人的欢心。高分者独立、果断、锋芒毕露、有魄力，常常自动寻找可施展所长的环境或机会，以充分表现自己的独创精神。'
+};
+
+const Y_FEATURES = {
+  'Y1':'心理健康标准分通常介于4~40分之间，均值为22分，一般不及12分者情绪颇不稳定，仅占人数分配的10%。担任艰巨工作的人都应有较高的心理健康标准分。',
+  'Y2':'低分者为成就较低的人才，高分者为成就较高的人才。此要素总分为10-100分，平均值为55分，67分以上者成功希望较大。',
+  'Y3':'总分可介于15~150之间，低分者为创造能力较弱者，高分者为创造能力较强者。Q1、Q2的标准分高于7分或此要素实际得分高于88分者，创造能力较强，应有所成就。',
+  'Y4':'低分者属于学习成长能力较差者，高分者属于学习成长能力较强者。总分可介于4~40分之间，均值为22分。不足17分者仅占人数的10%左右，从事专业或训练成功的可能性极小。27分以上者，则有成功的希望。'
+};
+
+// Norm tables: each factor has male and female arrays of [r1,l1, r2,l2, ... r10,l10]
+const NORMS = {
+  'A':{M:[0,2, 3,4, 5,6, 7,8, 9,10, 11,12, 13,14, 15,15, 16,17, 18,20],
+       F:[0,2, 3,4, 5,6, 7,8, 9,10, 11,12, 13,14, 15,16, 17,17, 18,20]},
+  'B':{M:[0,4, 5,5, 6,6, 7,7, 8,8, 9,9, 10,10, 11,11, 12,12, 13,13],
+       F:[0,4, 5,5, 6,6, 7,7, 8,8, 9,9, 10,10, 11,11, 12,12, 13,13]},
+  'C':{M:[0,6, 7,8, 9,10, 11,12, 13,14, 15,17, 18,19, 20,20, 21,22, 23,26],
+       F:[0,5, 6,7, 8,9, 10,11, 12,13, 14,16, 17,18, 19,19, 20,21, 22,26]},
+  'E':{M:[0,5, 6,7, 8,9, 10,11, 12,13, 14,16, 17,18, 19,20, 21,22, 23,26],
+       F:[0,5, 6,7, 8,9, 10,11, 12,13, 14,15, 16,17, 18,19, 20,21, 22,26]},
+  'F':{M:[0,3, 4,6, 7,8, 9,11, 12,13, 14,16, 17,19, 20,21, 22,23, 24,26],
+       F:[0,4, 5,6, 7,9, 10,11, 12,14, 15,17, 18,19, 20,21, 22,24, 25,26]},
+  'G':{M:[0,4, 5,6, 7,8, 9,10, 11,12, 13,14, 15,16, 17,17, 18,19, 20,20],
+       F:[0,4, 5,5, 6,7, 8,9, 10,11, 12,13, 14,15, 16,16, 17,17, 18,20]},
+  'H':{M:[0,1, 2,3, 4,6, 7,8, 9,11, 12,14, 15,17, 18,19, 20,21, 22,26],
+       F:[0,1, 2,3, 4,6, 7,8, 9,11, 12,14, 15,16, 17,18, 19,20, 21,26]},
+  'I':{M:[0,3, 4,4, 5,6, 7,8, 9,10, 11,12, 13,14, 12,12, 16,17, 18,20],
+       F:[0,4, 5,5, 6,7, 8,9, 10,11, 12,13, 14,14, 15,16, 17,17, 18,20]},
+  'L':{M:[0,2, 3,3, 4,5, 6,7, 8,9, 10,12, 13,13, 14,15, 16,17, 18,20],
+       F:[0,3, 4,4, 5,6, 7,8, 9,10, 11,12, 13,13, 14,15, 16,16, 17,20]},
+  'M':{M:[0,5, 6,7, 8,8, 9,10, 11,12, 13,14, 15,15, 16,17, 18,18, 19,26],
+       F:[0,6, 7,8, 9,9, 10,11, 12,13, 14,15, 16,17, 18,18, 19,19, 20,26]},
+  'N':{M:[0,3, 4,4, 5,5, 6,7, 8,9, 10,11, 12,12, 13,13, 14,14, 15,20],
+       F:[0,3, 4,5, 6,6, 7,8, 9,10, 11,11, 12,12, 13,14, 15,15, 16,20]},
+  'O':{M:[0,1, 2,2, 3,3, 4,5, 6,7, 8,10, 11,12, 13,14, 15,16, 17,26],
+       F:[0,1, 2,2, 3,4, 5,6, 7,9, 10,11, 12,14, 15,16, 17,18, 19,26]},
+  'Q1':{M:[0,5, 6,7, 8,9, 10,10, 11,12, 13,14, 12,12, 16,16, 17,18, 19,20],
+        F:[0,6, 7,7, 8,9, 10,10, 11,12, 13,14, 15,15, 16,16, 17,18, 19,20]},
+  'Q2':{M:[0,5, 6,7, 8,9, 10,10, 11,12, 13,15, 16,16, 17,18, 19,19, 20,20],
+        F:[0,4, 5,6, 7,8, 9,10, 11,12, 13,14, 15,16, 17,17, 18,19, 20,20]},
+  'Q3':{M:[0,4, 5,5, 6,7, 8,9, 10,11, 12,13, 14,15, 16,17, 18,18, 19,20],
+        F:[0,4, 5,6, 7,8, 9,9, 10,12, 13,14, 15,15, 16,17, 18,18, 19,20]},
+  'Q4':{M:[0,2, 3,4, 5,6, 7,8, 9,10, 11,13, 14,15, 16,17, 18,19, 20,26],
+        F:[0,3, 4,5, 6,7, 8,9, 10,11, 12,14, 15,16, 17,18, 19,20, 21,26]}
+};
+
+// Factor order for display
+const FACTOR_ORDER = ['A','B','C','E','F','G','H','I','L','M','N','O','Q1','Q2','Q3','Q4'];
+
+// ==================== SCORING ====================
+
+function calculateRawScores(answers) {
+  const raw = {};
+  FACTOR_ORDER.forEach(f => { raw[f] = 0; });
+
+  QUESTIONS.forEach(q => {
+    if (!q.list || q.f === 'W') return;
+    const answer = answers[q.id];
+    if (!answer) return;
+
+    const factor = q.f;
+    const list = q.list;
+
+    if (list === 'A') {
+      if (answer === 'A') raw[factor] += 2;
+      else if (answer === 'B') raw[factor] += 1;
+    } else if (list === 'C') {
+      if (answer === 'C') raw[factor] += 2;
+      else if (answer === 'B') raw[factor] += 1;
+    } else if (list === 'B') {
+      if (answer === 'B') raw[factor] += 1;
+    } else if (list === 'C1') {
+      if (answer === 'C') raw[factor] += 1;
+    } else if (list === 'A1') {
+      if (answer === 'A') raw[factor] += 1;
+    }
+  });
+  return raw;
+}
+
+function rawToSten(rawScore, factor, gender) {
+  const norms = NORMS[factor][gender === '男' ? 'M' : 'F'];
+  for (let i = 0; i < 10; i++) {
+    const r = norms[i * 2];
+    const l = norms[i * 2 + 1];
+    if (rawScore >= r && rawScore <= l) {
+      return i + 1;
+    }
+  }
+  return null; // Should not happen
+}
+
+function calculateAll(answers, gender) {
+  const raw = calculateRawScores(answers);
+  const sten = {};
+  FACTOR_ORDER.forEach(f => {
+    sten[f] = rawToSten(raw[f], f, gender);
+  });
+
+  // X factors
+  const x1 = (38 + 2*sten['L'] + 3*sten['O'] + 4*sten['Q4'] - 2*sten['G'] - 2*sten['H'] - 2*sten['Q2']) / 10;
+  const x2 = (2*sten['A'] + 3*sten['E'] + 4*sten['F'] + 5*sten['H'] - 2*sten['Q2'] - 11) / 10;
+  const x3 = (77 + 2*sten['C'] + 2*sten['E'] + 2*sten['F'] + 2*sten['N'] - 4*sten['A'] - 6*sten['I'] - 2*sten['M']) / 10;
+  const x4 = (4*sten['E'] + 3*sten['M'] + 4*sten['Q1'] + 4*sten['Q2'] - 3*sten['A'] - 2*sten['G']) / 10;
+
+  // Y factors
+  const y1 = sten['C'] + sten['F'] + (11 - sten['O']) + (11 - sten['Q4']);
+  const y2 = sten['Q3']*2 + sten['G']*2 + sten['C']*2 + sten['E'] + sten['N'] + sten['Q2'] + sten['Q1'];
+  const y3 = (11 - sten['A'])*2 + sten['B']*2 + sten['E'] + (11 - sten['F'])*2 + sten['H'] + sten['I']*2 + sten['M'] + (11 - sten['N']) + sten['Q1'] + sten['Q2']*2;
+  const y4 = sten['B'] + sten['G'] + sten['Q3'] + (11 - sten['F']);
+
+  return {
+    raw, sten,
+    x: { X1: +x1.toFixed(1), X2: +x2.toFixed(1), X3: +x3.toFixed(1), X4: +x4.toFixed(1) },
+    y: { Y1: y1, Y2: y2, Y3: y3, Y4: y4 }
+  };
+}
+
+// ==================== STATE ====================
+
+const STORAGE_KEY = '16pf_data';
+
+function loadState() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) return JSON.parse(data);
+  } catch(e) {}
+  return null;
+}
+
+function saveState(state) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) {}
+}
+
+function clearState() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+// ==================== RENDER ====================
+
+let currentState = null;
+let currentQuestion = 0;
+let chartInstance = null;
+
+function getState() {
+  const saved = loadState();
+  if (saved) return saved;
+  return { phase: 'info', name: '', gender: '', age: '', answers: {}, results: null };
+}
+
+function renderInfo() {
+  const state = getState();
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <h1>卡特尔16PF人格测评</h1>
+      <p>Sixteen Personality Factor Questionnaire</p>
+      <p style="font-size:0.95rem;color:var(--primary);margin-top:2px;">作者 Real | 联系邮箱 2567264238@qq.com</p>
+    </div>
+    <div class="card">
+      <h2>测评说明</h2>
+      <p style="margin-bottom:12px;font-size:0.95rem;color:#4a5568;">本测验共有187道题目，都是有关个人的兴趣和态度等问题。每个人对这些问题是会有不同看法的，回答也是不同的，因而对问题如何回答，并没有对与不对之分，只是表明你对这些问题的态度。请你要尽量表达个人的意见，不要有顾虑。</p>
+      <h2>注意事项</h2>
+      <ul style="font-size:0.9rem;color:#4a5568;padding-left:20px;">
+        <li>每题只能选择一个答案，全部要作答</li>
+        <li>尽量不选择B答案</li>
+        <li>本测验不计时间，但应凭自己的直觉反应进行作答，约1小时内完成</li>
+        <li>有些题目你可能从未思考过，同样要做出一种倾向性的选择</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>个人信息</h2>
+      <div class="form-group">
+        <label>昵称</label>
+        <input type="text" id="inputName" placeholder="请输入你的昵称" value="${escapeHtml(state.name)}">
+      </div>
+      <div class="form-group">
+        <label>性别</label>
+        <select id="inputGender">
+          <option value="">请选择</option>
+          <option value="男" ${state.gender==='男'?'selected':''}>男</option>
+          <option value="女" ${state.gender==='女'?'selected':''}>女</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>年龄</label>
+        <input type="number" id="inputAge" placeholder="请输入你的年龄" value="${state.age||''}" min="10" max="99">
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()">开始测评</button>
+      ${state.answers && Object.keys(state.answers).length > 0 ? `
+        <div class="reset-section" style="margin-top:16px;">
+          <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:8px;">检测到上次答题进度（已完成 ${Object.keys(state.answers).length}/187 题）</p>
+          <button class="btn btn-secondary" onclick="resumeQuiz()" style="width:100%;margin-bottom:8px;">继续答题</button>
+          <button class="btn btn-danger btn-small" onclick="resetQuiz()">清除记录重新开始</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function startQuiz() {
+  const name = document.getElementById('inputName').value.trim();
+  const gender = document.getElementById('inputGender').value;
+  const age = document.getElementById('inputAge').value.trim();
+
+  if (!name) { alert('请输入昵称'); return; }
+  if (!gender) { alert('请选择性别'); return; }
+  if (!age || isNaN(age) || age < 10 || age > 99) { alert('请输入有效年龄（10-99）'); return; }
+
+  currentState = { phase: 'quiz', name, gender, age, answers: {}, results: null };
+  saveState(currentState);
+  currentQuestion = findFirstUnanswered();
+  renderQuiz();
+}
+
+function resumeQuiz() {
+  currentState = loadState();
+  if (!currentState) { renderInfo(); return; }
+  currentState.phase = 'quiz';
+  currentQuestion = findFirstUnanswered();
+  renderQuiz();
+}
+
+function resetQuiz() {
+  if (confirm('确定要清除所有答题记录重新开始吗？此操作不可恢复。')) {
+    clearState();
+    currentState = null;
+    currentQuestion = 0;
+    renderInfo();
+  }
+}
+
+function findFirstUnanswered() {
+  const state = getState();
+  for (let i = 1; i <= 187; i++) {
+    if (!state.answers[i]) return i;
+  }
+  return 187;
+}
+
+function getUnansweredList(state) {
+  const list = [];
+  for (let i = 1; i <= 187; i++) {
+    if (!state.answers[i]) list.push(i);
+  }
+  return list;
+}
+
+function goToQuestion(num) {
+  currentQuestion = Math.max(1, Math.min(187, num));
+  renderQuiz();
+  window.scrollTo(0, 0);
+}
+
+function selectAnswer(choice) {
+  if (!currentState) currentState = loadState();
+  currentState.answers[currentQuestion] = choice;
+  saveState(currentState);
+
+  // Auto-advance after selection
+  if (currentQuestion < 187) {
+    setTimeout(() => {
+      currentQuestion++;
+      renderQuiz();
+      window.scrollTo(0, 0);
+    }, 200);
+  } else {
+    renderQuiz();
+    window.scrollTo(0, 0);
+  }
+}
+
+function renderQuiz() {
+  const state = loadState();
+  if (!state) { renderInfo(); return; }
+  currentState = state;
+
+  const q = QUESTIONS[currentQuestion - 1];
+  const answered = state.answers[currentQuestion] || null;
+  const totalAnswered = Object.keys(state.answers).length;
+  const progress = (totalAnswered / 187) * 100;
+
+  let optionsHtml = '';
+  ['A','B','C'].forEach(letter => {
+    const text = q[letter.toLowerCase()];
+    const sel = answered === letter ? ' selected' : '';
+    optionsHtml += `
+      <div class="option-btn${sel}" onclick="selectAnswer('${letter}')">
+        <span class="option-letter">${letter}</span>
+        <span class="option-text">${text}</span>
+      </div>`;
+  });
+
+  document.getElementById('app').innerHTML = `
+    <div class="header">
+      <h1>卡特尔16PF人格测评</h1>
+      <p>${state.name} | ${state.gender} | ${state.age}岁</p>
+      <div class="progress-text">第 ${currentQuestion} / 187 题（已答 ${totalAnswered} 题）</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width:${progress}%"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="question-num">第 ${currentQuestion} 题</div>
+      <div class="question-text">${q.t}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="goToQuestion(${currentQuestion - 1})" ${currentQuestion === 1 ? 'disabled' : ''}>← 上一题</button>
+        <button class="btn btn-secondary" onclick="goToQuestion(${currentQuestion + 1})" ${currentQuestion === 187 ? 'disabled' : ''}>下一题 →</button>
+      </div>
+      <div class="keyboard-hint">键盘快捷键：按 <strong>A / B / C</strong> 选择答案并自动跳转下一题</div>
+    </div>
+
+    <!-- Unanswered / Submit area -->
+    <div class="card" style="margin-top:16px;">
+      ${totalAnswered >= 187 ? `
+        <p style="text-align:center;color:var(--success);font-weight:600;margin-bottom:12px;">全部 187 题已完成</p>
+        <button class="btn btn-primary" onclick="finishQuiz()">提交答卷，查看结果</button>
+      ` : `
+        <p style="font-size:0.95rem;color:var(--warning);font-weight:600;">还有 <span style="font-size:1.2rem;">${187 - totalAnswered}</span> 题未作答</p>
+        <div style="margin:8px 0;font-size:0.85rem;color:var(--text-light);">点击下方题号可一键跳转到漏答题目：</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;max-height:200px;overflow-y:auto;padding:4px 0;">
+          ${getUnansweredList(state).map(n => `<span style="display:inline-block;padding:4px 10px;background:#fff5f5;border:1px solid #fed7d7;border-radius:6px;cursor:pointer;font-size:0.85rem;color:var(--danger);" onclick="goToQuestion(${n})">${n}</span>`).join('')}
+        </div>
+      `}
+    </div>
+
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn btn-danger btn-small" onclick="resetQuiz()">清除记录重新开始</button>
+    </div>
+  `;
+}
+
+function finishQuiz() {
+  const state = loadState();
+  if (!state) return;
+
+  // Check all answered
+  const unanswered = [];
+  for (let i = 1; i <= 187; i++) {
+    if (!state.answers[i]) unanswered.push(i);
+  }
+
+  if (unanswered.length > 0) {
+    alert(`还有 ${unanswered.length} 题未作答，请完成所有题目后再提交。`);
+    currentQuestion = unanswered[0];
+    renderQuiz();
+    window.scrollTo(0, 0);
+    return;
+  }
+
+  // Calculate results
+  const results = calculateAll(state.answers, state.gender);
+  state.results = results;
+  state.phase = 'results';
+  saveState(state);
+  renderResults();
+  window.scrollTo(0, 0);
+}
+
+function renderResults() {
+  const state = loadState();
+  if (!state || !state.results) { renderInfo(); return; }
+  const r = state.results;
+
+  // Build factor details HTML
+  let factorDetailsHtml = '';
+  FACTOR_ORDER.forEach(f => {
+    const name = FACTOR_NAMES[f];
+    const sten = r.sten[f];
+    let badgeClass = 'mid';
+    let label = '中等';
+    let desc = '';
+    if (sten <= 3) {
+      badgeClass = 'low';
+      label = '低分';
+      desc = FEATURES[f].low;
+    } else if (sten >= 8) {
+      badgeClass = 'high';
+      label = '高分';
+      desc = FEATURES[f].high;
+    } else {
+      desc = FEATURES[f].low + '\n' + FEATURES[f].high;
+    }
+    factorDetailsHtml += `
+      <div class="factor-detail">
+        <h4>${f}（${name}）<span class="score-badge ${badgeClass}">标准分 ${sten} — ${label}</span></h4>
+        <p>${desc.replace(/\n/g, '<br>')}</p>
+      </div>`;
+  });
+
+  // Build XY HTML
+  let xyHtml = '';
+  ['X1','X2','X3','X4'].forEach(x => {
+    xyHtml += `
+      <div class="xy-card">
+        <h4>${x}：${x==='X1'?'适应与焦虑性':x==='X2'?'内向与外向性':x==='X3'?'感情用事与安详机警性':'怯懦与果敢性'} <span class="xy-score">得分：${r.x[x]}</span></h4>
+        <p>${X_FEATURES[x]}</p>
+      </div>`;
+  });
+  ['Y1','Y2','Y3','Y4'].forEach(y => {
+    xyHtml += `
+      <div class="xy-card">
+        <h4>${y}：${y==='Y1'?'心理健康者的人格因素':y==='Y2'?'从事专业而有成就者的人格因素':y==='Y3'?'创造力强的人格因素':'在新的环境中有成长能力者的人格因素'} <span class="xy-score">得分：${r.y[y]}</span></h4>
+        <p>${Y_FEATURES[y]}</p>
+      </div>`;
+  });
+
+  // Build table rows
+  let tableRows = '';
+  FACTOR_ORDER.forEach(f => {
+    const sten = r.sten[f];
+    let tag = '';
+    if (sten <= 3) tag = '<span class="tag-low">低分</span>';
+    else if (sten >= 8) tag = '<span class="tag-high">高分</span>';
+    const clsLow = sten <= 3 ? ' low' : '';
+    const clsHigh = sten >= 8 ? ' high' : '';
+    // Build score bar visualization (1-10)
+    let barCells = '';
+    for (let i = 1; i <= 10; i++) {
+      if (i === sten) barCells += `<td style="background:var(--primary);color:#fff;font-weight:700;">★</td>`;
+      else barCells += `<td>${i}</td>`;
+    }
+    tableRows += `
+      <tr>
+        <td>${f}（${FACTOR_NAMES[f]}）</td>
+        <td>${r.raw[f]}</td>
+        <td class="${clsLow || clsHigh}">${sten} ${tag}</td>
+        ${barCells}
+      </tr>`;
+  });
+
+  document.getElementById('app').innerHTML = `
+    <div class="header no-print">
+      <h1>16PF 测评报告</h1>
+      <p>${state.name} | ${state.gender} | ${state.age}岁</p>
+    </div>
+
+    <div class="result-header print-only" style="display:none;">
+      <h2>卡特尔十六种人格因素测验报告</h2>
+      <p>姓名：${state.name} | 性别：${state.gender} | 年龄：${state.age}岁</p>
+    </div>
+
+    <!-- Radar Chart -->
+    <div class="card">
+      <h2>16种人格因素雷达图</h2>
+      <div class="chart-container">
+        <canvas id="radarChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Score Table -->
+    <div class="card">
+      <h2>得分总览</h2>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:10px;"><span class="tag-low">低分</span> ≤3分 | <span class="tag-high">高分</span> ≥8分</p>
+      <div class="table-wrap">
+        <table class="factor-table">
+          <thead>
+            <tr>
+              <th>因素</th>
+              <th>原始分</th>
+              <th>标准分</th>
+              <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Factor Details -->
+    <div class="card">
+      <h2>各因素详细解析</h2>
+      ${factorDetailsHtml}
+    </div>
+
+    <!-- XY Factors -->
+    <div class="card">
+      <h2>次元人格因素和特殊应用公式</h2>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:10px;">X类型：3分以下为低分特征，8分以上为高分特征</p>
+      ${xyHtml}
+    </div>
+
+    <!-- Export -->
+    <div class="card no-print">
+      <h2>导出报告</h2>
+      <div class="export-buttons">
+        <button class="btn btn-primary" onclick="exportPDF()">导出 PDF（打印）</button>
+        <button class="btn btn-secondary" onclick="exportWord()">导出 Word 文档</button>
+      </div>
+    </div>
+
+    <!-- Reset -->
+    <div class="reset-section no-print">
+      <button class="btn btn-danger btn-small" onclick="resetQuiz()">清除记录重新测评</button>
+    </div>
+  `;
+
+  // Draw chart
+  setTimeout(drawRadarChart, 100);
+}
+
+function drawRadarChart() {
+  const ctx = document.getElementById('radarChart');
+  if (!ctx) return;
+  if (chartInstance) chartInstance.destroy();
+
+  const state = loadState();
+  if (!state || !state.results) return;
+  const r = state.results;
+
+  const labels = FACTOR_ORDER.map(f => f + ' ' + FACTOR_NAMES[f]);
+  const data = FACTOR_ORDER.map(f => r.sten[f]);
+
+  chartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '标准分（1-10）',
+        data: data,
+        backgroundColor: 'rgba(74,108,247,0.2)',
+        borderColor: 'rgba(74,108,247,1)',
+        borderWidth: 2,
+        pointBackgroundColor: data.map(v => v <= 3 ? '#e53e3e' : v >= 8 ? '#4A6CF7' : '#718096'),
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        r: {
+          min: 1,
+          max: 10,
+          ticks: { stepSize: 1, display: true, backdropColor: 'transparent', font: { size: 10 } },
+          pointLabels: { font: { size: 11 } }
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
+function exportPDF() {
+  // Add print-only header
+  document.querySelector('.print-only').style.display = 'block';
+  window.print();
+  setTimeout(() => {
+    const el = document.querySelector('.print-only');
+    if (el) el.style.display = 'none';
+  }, 500);
+}
+
+function exportWord() {
+  const state = loadState();
+  if (!state || !state.results) return;
+  const r = state.results;
+
+  // Build a simple HTML document that Word can open
+  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8"><style>
+body { font-family: '宋体', SimSun, serif; font-size: 12pt; line-height: 1.8; color: #000; }
+h2 { font-size: 16pt; text-align: center; }
+h3 { font-size: 14pt; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+th, td { border: 1px solid #000; padding: 4px 8px; text-align: center; font-size: 10pt; }
+th { background: #eee; }
+.low { color: #c00; font-weight: bold; }
+.high { color: #00c; font-weight: bold; }
+</style></head><body>
+<h2>卡特尔十六种人格因素测验报告</h2>
+<p><b>姓名：</b>${state.name} &nbsp; <b>性别：</b>${state.gender} &nbsp; <b>年龄：</b>${state.age}岁</p>
+<h3>一、得分总览</h3>
+<table><tr><th>因素</th><th>原始分</th><th>标准分</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr>`;
+
+  FACTOR_ORDER.forEach(f => {
+    const sten = r.sten[f];
+    let cls = '';
+    if (sten <= 3) cls = ' class="low"';
+    else if (sten >= 8) cls = ' class="high"';
+    let barCells = '';
+    for (let i = 1; i <= 10; i++) {
+      if (i === sten) barCells += `<td><b>★</b></td>`;
+      else barCells += `<td>${i}</td>`;
+    }
+    html += `<tr><td>${f}（${FACTOR_NAMES[f]}）</td><td>${r.raw[f]}</td><td${cls}>${sten}</td>${barCells}</tr>`;
+  });
+
+  html += `</table><h3>二、因素详细解析</h3>`;
+
+  FACTOR_ORDER.forEach(f => {
+    const name = FACTOR_NAMES[f];
+    const sten = r.sten[f];
+    let label = '中等';
+    let desc = '';
+    if (sten <= 3) { label = '低分'; desc = FEATURES[f].low; }
+    else if (sten >= 8) { label = '高分'; desc = FEATURES[f].high; }
+    else { desc = FEATURES[f].low + '\n' + FEATURES[f].high; }
+    html += `<p><b>${f}（${name}）— 标准分：${sten}（${label}）</b></p><p>${desc.replace(/\n/g, '<br>')}</p>`;
+  });
+
+  html += `<h3>三、次元人格因素和特殊应用公式</h3>`;
+  ['X1','X2','X3','X4'].forEach(x => {
+    const xname = x==='X1'?'适应与焦虑性':x==='X2'?'内向与外向性':x==='X3'?'感情用事与安详机警性':'怯懦与果敢性';
+    html += `<p><b>${x}：${xname} — 得分：${r.x[x]}</b></p><p>${X_FEATURES[x]}</p>`;
+  });
+  ['Y1','Y2','Y3','Y4'].forEach(y => {
+    const yname = y==='Y1'?'心理健康者的人格因素':y==='Y2'?'从事专业而有成就者的人格因素':y==='Y3'?'创造力强的人格因素':'在新的环境中有成长能力者的人格因素';
+    html += `<p><b>${y}：${yname} — 得分：${r.y[y]}</b></p><p>${Y_FEATURES[y]}</p>`;
+  });
+
+  html += `</body></html>`;
+
+  const blob = new Blob([html], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `16PF测评报告_${state.name}.doc`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ==================== KEYBOARD ====================
+
+document.addEventListener('keydown', function(e) {
+  const state = loadState();
+  if (!state || state.phase !== 'quiz') return;
+
+  const key = e.key.toUpperCase();
+  if (key === 'A' || key === 'B' || key === 'C') {
+    e.preventDefault();
+    selectAnswer(key);
+  } else if (key === 'ARROWLEFT' || key === 'LEFT') {
+    e.preventDefault();
+    goToQuestion(currentQuestion - 1);
+  } else if (key === 'ARROWRIGHT' || key === 'RIGHT') {
+    e.preventDefault();
+    goToQuestion(currentQuestion + 1);
+  }
+});
+
+// ==================== INIT ====================
+
+function init() {
+  const state = loadState();
+  if (!state || state.phase === 'info') {
+    renderInfo();
+  } else if (state.phase === 'quiz') {
+    currentState = state;
+    currentQuestion = findFirstUnanswered();
+    renderQuiz();
+  } else if (state.phase === 'results') {
+    currentState = state;
+    renderResults();
+  } else {
+    renderInfo();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
